@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jahid Vehicle Rentals | Administrative Console</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        },
+                        darkCard: '#131926',
+                        darkBg: '#0b0f17',
+                        darkBorder: '#1f293d',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f293d;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP HEADER -->
+    <header class="border-b border-darkBorder bg-darkCard/90 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <!-- Brand & Console Title -->
+            <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 ring-1 ring-white/20">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+                            Jahid <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Vehicle Rentals</span>
+                        </h1>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                            Admin V2.4
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">
+                        High-Density Fleet Operations & Real-Time Customer Rental Dispatch
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Cluster & System Status -->
+            <div class="flex items-center space-x-3">
+                <div id="connectionStatusBadge" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="connectionStatusText">Express API Online</span>
+                </div>
+
+                <button onclick="fetchAllData()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-darkBorder transition flex items-center space-x-1 text-xs" title="Refresh Dashboard Data">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Sync</span>
+                </button>
+
+                <div class="h-6 w-px bg-darkBorder"></div>
+
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-300 font-bold text-xs">
+                        JV
+                    </div>
+                    <div class="text-right hidden xl:block">
+                        <p class="text-xs font-medium text-slate-200">Administrator</p>
+                        <p class="text-[10px] text-slate-400">root@rental_db</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- 1. KPI SUMMARY STRIP -->
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <!-- Metric 1: Total Fleet -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Fleet</p>
+                    <h3 id="statTotalFleet" class="text-2xl font-bold text-white mt-1">0</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Vehicles in inventory</p>
+                </div>
+                <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Metric 2: Available -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Ready for Rent</p>
+                    <h3 id="statAvailable" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                    <p class="text-[11px] text-emerald-500/80 mt-0.5">Available right now</p>
+                </div>
+                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Metric 3: Active Rentals -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Currently Rented</p>
+                    <h3 id="statRented" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
+                    <p class="text-[11px] text-amber-500/80 mt-0.5">Dispatched to clients</p>
+                </div>
+                <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Metric 4: Customer Checkouts -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Customer Logs</p>
+                    <h3 id="statTotalCustomers" class="text-2xl font-bold text-cyan-400 mt-1">0</h3>
+                    <p class="text-[11px] text-cyan-500/80 mt-0.5">Total registered rentals</p>
+                </div>
+                <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <!-- Metric 5: Daily Revenue Yield -->
+            <div class="bg-darkCard p-4 rounded-xl border border-darkBorder flex items-center justify-between col-span-2 md:col-span-1">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Active Daily Yield</p>
+                    <h3 id="statDailyRevenue" class="text-2xl font-bold text-purple-400 mt-1">₹0</h3>
+                    <p class="text-[11px] text-purple-400/80 mt-0.5">From active rentals</p>
+                </div>
+                <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg border border-purple-500/20">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. DUAL OPERATIONS INPUT FORMS (PANEL A & PANEL B) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- PANEL A: FLEET REGISTRATION FORM -->
+            <div class="bg-darkCard rounded-xl border border-darkBorder p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-darkBorder">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-white">Panel A: Register Fleet Element</h2>
+                            <p class="text-xs text-slate-400">Direct Express POST pipeline to `/vehicles`</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-800 px-2.5 py-1 rounded">vehicles table</span>
+                </div>
+
+                <form id="formAddVehicle" onsubmit="handleVehicleSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Vehicle No -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Vehicle Reg No <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="hash" class="w-4 h-4"></i>
+                                </span>
+                                <input type="text" id="v_vehicle_no" required placeholder="e.g. KA-01-SP-9009"
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 uppercase tracking-wider font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Category Selector Toggle -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Category <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="catBtnCar" onclick="selectCategory('Car')"
+                                    class="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-emerald-600/20 border-emerald-500 text-emerald-300">
+                                    <i data-lucide="car" class="w-4 h-4"></i>
+                                    <span>Car</span>
+                                </button>
+                                <button type="button" id="catBtnBike" onclick="selectCategory('Motorbike')"
+                                    class="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-slate-900 border-darkBorder text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="bike" class="w-4 h-4"></i>
+                                    <span>Motorbike</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="v_vehicle_category" value="Car">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Model Name -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Vehicle Model / Specification <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="tag" class="w-4 h-4"></i>
+                                </span>
+                                <input type="text" id="v_model" required placeholder="e.g. Ferrari SF90 Stradale"
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                            </div>
+                        </div>
+
+                        <!-- Rent Per Day -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Daily Rent (₹) <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-bold text-xs">
+                                    ₹
+                                </span>
+                                <input type="number" id="v_rent_per_day" required min="100" step="50" placeholder="15000"
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-400">Default Status:</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                Available
+                            </span>
+                        </div>
+                        <button type="submit" id="btnSubmitVehicle"
+                            class="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-lg shadow-emerald-600/20 transition">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Register Vehicle</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PANEL B: CUSTOMER RENTAL CHECKOUT FORM -->
+            <div class="bg-darkCard rounded-xl border border-darkBorder p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-darkBorder">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <i data-lucide="user-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-white">Panel B: Customer Checkout Dispatch</h2>
+                            <p class="text-xs text-slate-400">Direct Express POST pipeline to `/customers`</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-400 bg-slate-800 px-2.5 py-1 rounded">customers table</span>
+                </div>
+
+                <form id="formAddCustomer" onsubmit="handleCustomerSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Customer Name -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Customer Full Name <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="user" class="w-4 h-4"></i>
+                                </span>
+                                <input type="text" id="c_customer_name" required placeholder="e.g. Alexandre Sterling"
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Contact Phone No <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                </span>
+                                <input type="tel" id="c_phone_no" required placeholder="e.g. +91-98765-43210"
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Vehicle Selection (Dropdown of Available Vehicles) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Select Available Fleet Asset <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="key" class="w-4 h-4"></i>
+                                </span>
+                                <select id="c_rented_vehicle_no" required
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 appearance-none">
+                                    <option value="" disabled selected>-- Choose Available Vehicle --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Rental Date -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                Rental Start Date <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                </span>
+                                <input type="date" id="c_rental_date" required
+                                    class="w-full bg-slate-900 border border-darkBorder rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div class="text-xs text-slate-400 flex items-center space-x-1.5">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400"></i>
+                            <span>Updates vehicle status to <strong class="text-amber-400">Rented</strong> automatically</span>
+                        </div>
+                        <button type="submit" id="btnSubmitCustomer"
+                            class="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-lg shadow-cyan-600/20 transition">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Confirm & Checkout</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 3. ZONE 1: FLEET INVENTORY MANAGEMENT (VISUAL CARDS & CONTROLS) -->
+        <section class="bg-darkCard rounded-xl border border-darkBorder p-5 shadow-sm space-y-4">
+            <!-- Zone Header & Filters -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-darkBorder">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                        <i data-lucide="car-front" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                            <span>Fleet Inventory Management Zone</span>
+                            <span id="fleetCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">0</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Manage modern sports cars, luxury SUVs, sedans, superbikes, & cruisers</p>
+                    </div>
+                </div>
+
+                <!-- Filter Controls & Search -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" id="searchFleet" oninput="filterFleetGrid()" placeholder="Filter vehicle no, model..."
+                            class="bg-slate-900 border border-darkBorder rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-48 sm:w-56">
+                    </div>
+
+                    <!-- Category Pills -->
+                    <div class="flex items-center bg-slate-900 border border-darkBorder rounded-lg p-0.5 text-xs">
+                        <button onclick="setFleetCategoryFilter('All')" id="filterAll" class="px-2.5 py-1 rounded-md font-semibold text-white bg-slate-800">All</button>
+                        <button onclick="setFleetCategoryFilter('Car')" id="filterCar" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Cars</button>
+                        <button onclick="setFleetCategoryFilter('Motorbike')" id="filterBike" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">Bikes</button>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <select id="filterStatus" onchange="filterFleetGrid()" class="bg-slate-900 border border-darkBorder rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500">
+                        <option value="All">All Status</option>
+                        <option value="Available">Available Only</option>
+                        <option value="Rented">Rented Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Fleet Inventory Visual Grid -->
+            <div id="fleetGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <!-- Vehicle Cards Dynamically Injected Here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyFleetState" class="hidden text-center py-12 border border-dashed border-darkBorder rounded-xl">
+                <i data-lucide="car" class="w-12 h-12 mx-auto text-slate-600 mb-2"></i>
+                <h4 class="text-sm font-bold text-slate-300">No vehicles match your current filter</h4>
+                <p class="text-xs text-slate-500 mt-1">Try resetting filters or insert a new vehicle in Panel A above.</p>
+            </div>
+        </section>
+
+        <!-- 4. ZONE 2: CUSTOMER RENTAL LOGS (TABULAR LOGS & RETURN ACTIONS) -->
+        <section class="bg-darkCard rounded-xl border border-darkBorder p-5 shadow-sm space-y-4">
+            <!-- Zone Header & Search -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-darkBorder">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20">
+                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                            <span>Customer Rental Logs Zone</span>
+                            <span id="customerCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">0</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Real-time checkout records with connected foreign key relationships</p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input type="text" id="searchCustomers" oninput="renderCustomerTable()" placeholder="Search customer, phone, vehicle..."
+                        class="bg-slate-900 border border-darkBorder rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-56 sm:w-64">
+                </div>
+            </div>
+
+            <!-- Customer Logs Table -->
+            <div class="overflow-x-auto rounded-lg border border-darkBorder">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-900/80 text-slate-400 uppercase font-bold tracking-wider border-b border-darkBorder">
+                        <tr>
+                            <th class="py-3 px-4">Log ID</th>
+                            <th class="py-3 px-4">Customer Details</th>
+                            <th class="py-3 px-4">Contact Phone</th>
+                            <th class="py-3 px-4">Assigned Vehicle</th>
+                            <th class="py-3 px-4">Checkout Date</th>
+                            <th class="py-3 px-4">Daily Rate</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody" class="divide-y divide-darkBorder text-slate-300">
+                        <!-- Populated Dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty Customers State -->
+            <div id="emptyCustomersState" class="hidden text-center py-12 border border-dashed border-darkBorder rounded-xl">
+                <i data-lucide="users" class="w-12 h-12 mx-auto text-slate-600 mb-2"></i>
+                <h4 class="text-sm font-bold text-slate-300">No customer checkout logs found</h4>
+                <p class="text-xs text-slate-500 mt-1">Use Panel B above to dispatch a vehicle to a customer.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-darkBorder bg-darkCard/50 py-4 mt-8">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <div>
+                <span class="font-bold text-slate-400">Jahid Vehicle Rentals</span> &mdash; Full-Stack Administrative System
+            </div>
+            <div class="flex items-center space-x-4">
+                <span>Database: <code class="text-slate-400 font-mono">rental_db</code></span>
+                <span>Port: <code class="text-slate-400 font-mono">3000</code></span>
+                <span class="text-emerald-400 font-medium">CRUD APIs Active</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- EDIT VEHICLE MODAL -->
+    <div id="editVehicleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkCard border border-darkBorder rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-darkBorder">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="text-base font-bold text-white">Edit Vehicle Fleet Details</h3>
+                </div>
+                <button onclick="closeEditVehicleModal()" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="formEditVehicle" onsubmit="handleEditVehicleSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit_v_id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Vehicle No (Primary Key)</label>
+                    <input type="text" id="edit_v_no" disabled class="w-full bg-slate-900/60 border border-darkBorder rounded-lg px-3 py-2 text-xs text-slate-400 font-mono cursor-not-allowed">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+                        <select id="edit_v_category" class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="Car">Car</option>
+                            <option value="Motorbike">Motorbike</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+                        <select id="edit_v_status" class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="Available">Available</option>
+                            <option value="Rented">Rented</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Model Name</label>
+                    <input type="text" id="edit_v_model" required class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Rent Per Day (₹)</label>
+                    <input type="number" id="edit_v_rent" required min="100" class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeEditVehicleModal()" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500 shadow-lg shadow-emerald-600/20">Save Changes (PUT)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT CUSTOMER MODAL -->
+    <div id="editCustomerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkCard border border-darkBorder rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-darkBorder">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-cyan-400"></i>
+                    <h3 class="text-base font-bold text-white">Edit Customer Rental Details</h3>
+                </div>
+                <button onclick="closeEditCustomerModal()" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="formEditCustomer" onsubmit="handleEditCustomerSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit_c_id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Customer Full Name</label>
+                    <input type="text" id="edit_c_name" required class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Contact Phone</label>
+                    <input type="tel" id="edit_c_phone" required class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Assigned Vehicle</label>
+                    <select id="edit_c_vehicle" required class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Rental Date</label>
+                    <input type="date" id="edit_c_date" required class="w-full bg-slate-900 border border-darkBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeEditCustomerModal()" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 shadow-lg shadow-cyan-600/20">Save Changes (PUT)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // State management
+        let stateVehicles = [];
+        let stateCustomers = [];
+        let fleetCategoryFilter = 'All';
+
+        // Pre-mapped high-resolution local images generated for fleet assets
+        const imageAssets = {
+            sportsCar: 'images/sports_car.jpg',
+            luxurySuv: 'images/luxury_suv.jpg',
+            executiveSedan: 'images/executive_sedan.jpg',
+            superbike: 'images/superbike.jpg',
+            cruiserBike: 'images/cruiser_bike.jpg',
+        };
+
+        // Fallback default vehicles in case server is started without database pre-seeding
+        const defaultVehicles = [
+            { vehicle_no: 'KA-01-SP-9009', vehicle_category: 'Car', model: 'Ferrari SF90 Stradale', rent_per_day: 15000, status: 'Available' },
+            { vehicle_no: 'KA-05-SUV-4040', vehicle_category: 'Car', model: 'Range Rover SV Autobiography', rent_per_day: 9500, status: 'Rented' },
+            { vehicle_no: 'KA-03-SD-2121', vehicle_category: 'Car', model: 'Mercedes-Benz S-Class AMG Line', rent_per_day: 7500, status: 'Available' },
+            { vehicle_no: 'KA-04-BK-7777', vehicle_category: 'Motorbike', model: 'Ducati Panigale V4 Superbike', rent_per_day: 5000, status: 'Available' },
+            { vehicle_no: 'KA-02-CR-1100', vehicle_category: 'Motorbike', model: 'Harley-Davidson Fat Bob 114 Cruiser', rent_per_day: 3800, status: 'Rented' },
+            { vehicle_no: 'KA-09-SP-3333', vehicle_category: 'Car', model: 'BMW M4 Competition Coupe', rent_per_day: 11000, status: 'Available' }
+        ];
+
+        const defaultCustomers = [
+            { customer_id: 1, customer_name: 'Alexandre Sterling', phone_no: '+91-98765-43210', rented_vehicle_no: 'KA-05-SUV-4040', rental_date: '2026-11-04' },
+            { customer_id: 2, customer_name: 'Zainab Al-Mansoor', phone_no: '+91-98123-56789', rented_vehicle_no: 'KA-02-CR-1100', rental_date: '2026-11-06' }
+        ];
+
+        // Autonomous image selection according to model keywords & category
+        function getVehicleThumbnail(model, category) {
+            const m = (model || '').toLowerCase();
+            if (category === 'Motorbike') {
+                if (m.includes('cruiser') || m.includes('harley') || m.includes('bob') || m.includes('bullet') || m.includes('classic')) {
+                    return imageAssets.cruiserBike;
+                }
+                return imageAssets.superbike;
+            } else {
+                if (m.includes('suv') || m.includes('rover') || m.includes('defender') || m.includes('safari') || m.includes('thar') || m.includes('wagon')) {
+                    return imageAssets.luxurySuv;
+                }
+                if (m.includes('mercedes') || m.includes('sedan') || m.includes('bmw') || m.includes('audi') || m.includes('class') || m.includes('camry')) {
+                    return imageAssets.executiveSedan;
+                }
+                return imageAssets.sportsCar;
+            }
+        }
+
+        // Initialize date picker to today
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('c_rental_date');
+            if (dateInput) dateInput.value = today;
+            fetchAllData();
+        });
+
+        // Category button selector in Panel A
+        function selectCategory(cat) {
+            document.getElementById('v_vehicle_category').value = cat;
+            const btnCar = document.getElementById('catBtnCar');
+            const btnBike = document.getElementById('catBtnBike');
+
+            if (cat === 'Car') {
+                btnCar.className = 'flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-emerald-600/20 border-emerald-500 text-emerald-300';
+                btnBike.className = 'flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-slate-900 border-darkBorder text-slate-400 hover:text-slate-200';
+            } else {
+                btnBike.className = 'flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-emerald-600/20 border-emerald-500 text-emerald-300';
+                btnCar.className = 'flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg border text-xs font-bold transition bg-slate-900 border-darkBorder text-slate-400 hover:text-slate-200';
+            }
+        }
+
+        // Fetch data from backend with fallback support
+        async function fetchAllData() {
+            let apiOnline = true;
+            try {
+                const [resVehicles, resCustomers] = await Promise.all([
+                    fetch('/vehicles'),
+                    fetch('/customers')
+                ]);
+
+                if (!resVehicles.ok || !resCustomers.ok) {
+                    throw new Error('API responded with error code');
+                }
+
+                stateVehicles = await resVehicles.json();
+                stateCustomers = await resCustomers.json();
+
+                // If DB is empty, use defaults
+                if (!stateVehicles || stateVehicles.length === 0) {
+                    stateVehicles = [...defaultVehicles];
+                }
+                if (!stateCustomers || stateCustomers.length === 0) {
+                    stateCustomers = [...defaultCustomers];
+                }
+            } catch (err) {
+                console.warn('Backend / MySQL offline or running standalone. Operating in local demo mode:', err.message);
+                apiOnline = false;
+                if (stateVehicles.length === 0) stateVehicles = [...defaultVehicles];
+                if (stateCustomers.length === 0) stateCustomers = [...defaultCustomers];
+            }
+
+            updateConnectionStatus(apiOnline);
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+            lucide.createIcons();
+        }
+
+        function updateConnectionStatus(isOnline) {
+            const badge = document.getElementById('connectionStatusBadge');
+            const text = document.getElementById('connectionStatusText');
+            if (isOnline) {
+                badge.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold';
+                text.textContent = 'Express API Online';
+            } else {
+                badge.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-800/40 text-amber-400 text-xs font-semibold';
+                text.textContent = 'Demo Mode (Local)';
+            }
+        }
+
+        // Update KPI counters
+        function updateDashboardMetrics() {
+            const totalFleet = stateVehicles.length;
+            const availableCount = stateVehicles.filter(v => v.status === 'Available').length;
+            const rentedCount = stateVehicles.filter(v => v.status === 'Rented').length;
+            const totalCustomers = stateCustomers.length;
+
+            // Calculate active daily revenue rate from rented fleet items
+            let dailyRevenue = 0;
+            stateVehicles.forEach(v => {
+                if (v.status === 'Rented') {
+                    dailyRevenue += Number(v.rent_per_day || 0);
+                }
+            });
+
+            document.getElementById('statTotalFleet').textContent = totalFleet;
+            document.getElementById('statAvailable').textContent = availableCount;
+            document.getElementById('statRented').textContent = rentedCount;
+            document.getElementById('statTotalCustomers').textContent = totalCustomers;
+            document.getElementById('statDailyRevenue').textContent = '₹' + dailyRevenue.toLocaleString('en-IN');
+
+            document.getElementById('fleetCountBadge').textContent = totalFleet + ' items';
+            document.getElementById('customerCountBadge').textContent = totalCustomers + ' logs';
+        }
+
+        // Populate dropdown in Panel B with only available vehicles
+        function populateAvailableVehiclesDropdown() {
+            const select = document.getElementById('c_rented_vehicle_no');
+            select.innerHTML = '<option value="" disabled selected>-- Choose Available Vehicle --</option>';
+
+            const available = stateVehicles.filter(v => v.status === 'Available');
+            if (available.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.disabled = true;
+                opt.textContent = "No vehicles currently available";
+                select.appendChild(opt);
+                return;
+            }
+
+            available.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.vehicle_no;
+                opt.textContent = `${v.vehicle_no} - ${v.model} (₹${v.rent_per_day}/day - ${v.vehicle_category})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Category filter in Zone 1
+        function setFleetCategoryFilter(category) {
+            fleetCategoryFilter = category;
+            const btns = {
+                All: document.getElementById('filterAll'),
+                Car: document.getElementById('filterCar'),
+                Motorbike: document.getElementById('filterBike')
+            };
+            Object.keys(btns).forEach(key => {
+                if (key === category) {
+                    btns[key].className = 'px-2.5 py-1 rounded-md font-semibold text-white bg-slate-800';
+                } else {
+                    btns[key].className = 'px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white';
+                }
+            });
+            renderFleetGrid();
+        }
+
+        function filterFleetGrid() {
+            renderFleetGrid();
+        }
+
+        // Render Zone 1: Fleet Inventory Visual Grid
+        function renderFleetGrid() {
+            const container = document.getElementById('fleetGridContainer');
+            const emptyState = document.getElementById('emptyFleetState');
+            const searchVal = (document.getElementById('searchFleet').value || '').toLowerCase();
+            const statusVal = document.getElementById('filterStatus').value;
+
+            const filtered = stateVehicles.filter(v => {
+                const matchesCat = (fleetCategoryFilter === 'All') || (v.vehicle_category === fleetCategoryFilter);
+                const matchesStatus = (statusVal === 'All') || (v.status === statusVal);
+                const matchesSearch = v.vehicle_no.toLowerCase().includes(searchVal) ||
+                                      v.model.toLowerCase().includes(searchVal);
+                return matchesCat && matchesStatus && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = filtered.map(v => {
+                const imgPath = getVehicleThumbnail(v.model, v.vehicle_category);
+                const isAvailable = v.status === 'Available';
+                const statusBadgeClass = isAvailable
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 ring-1 ring-emerald-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/40 ring-1 ring-amber-500/30';
+
+                const categoryIcon = v.vehicle_category === 'Car' ? 'car' : 'bike';
+
+                return `
+                <div class="bg-slate-900/90 rounded-xl border border-darkBorder hover:border-slate-600 transition-all duration-200 overflow-hidden group flex flex-col justify-between">
+                    <div>
+                        <!-- Vehicle Visual Thumbnail Banner -->
+                        <div class="relative h-44 w-full overflow-hidden bg-slate-950">
+                            <img src="${imgPath}" alt="${v.model}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-darkBg via-darkBg/30 to-transparent"></div>
+                            
+                            <!-- Category Pill -->
+                            <div class="absolute top-3 left-3 flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[11px] font-bold text-white">
+                                <i data-lucide="${categoryIcon}" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>${v.vehicle_category}</span>
+                            </div>
+
+                            <!-- Status Badge -->
+                            <div class="absolute top-3 right-3 px-2.5 py-1 rounded-md border text-[11px] font-bold uppercase tracking-wider backdrop-blur-md ${statusBadgeClass}">
+                                ${v.status}
+                            </div>
+
+                            <!-- Vehicle No Overlay -->
+                            <div class="absolute bottom-2 left-3">
+                                <span class="px-2 py-0.5 rounded bg-black/70 backdrop-blur font-mono text-xs font-bold text-emerald-400 tracking-wider border border-emerald-500/30">
+                                    ${v.vehicle_no}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Content -->
+                        <div class="p-4 space-y-2">
+                            <h3 class="text-sm font-bold text-white truncate" title="${v.model}">
+                                ${v.model}
+                            </h3>
+                            <div class="flex items-center justify-between text-xs pt-1">
+                                <span class="text-slate-400">Daily Rental:</span>
+                                <span class="font-extrabold text-base text-emerald-400 font-mono">
+                                    ₹${Number(v.rent_per_day).toLocaleString('en-IN')}<span class="text-[10px] text-slate-400 font-normal">/day</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row Action Buttons (PUT / DELETE) -->
+                    <div class="px-4 pb-4 pt-2 border-t border-darkBorder flex items-center justify-between gap-2">
+                        <button onclick="openEditVehicleModal('${v.vehicle_no}')"
+                            class="flex-1 inline-flex items-center justify-center space-x-1.5 py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-darkBorder transition">
+                            <i data-lucide="edit-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            <span>Edit (PUT)</span>
+                        </button>
+                        <button onclick="handleDeleteVehicle('${v.vehicle_no}')"
+                            class="inline-flex items-center justify-center p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
+                            title="Delete Vehicle">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // Render Zone 2: Customer Rental Logs Table
+        function renderCustomerTable() {
+            const tbody = document.getElementById('customersTableBody');
+            const emptyState = document.getElementById('emptyCustomersState');
+            const searchVal = (document.getElementById('searchCustomers').value || '').toLowerCase();
+
+            const filtered = stateCustomers.filter(c => {
+                const name = (c.customer_name || '').toLowerCase();
+                const phone = (c.phone_no || '').toLowerCase();
+                const vno = (c.rented_vehicle_no || '').toLowerCase();
+                return name.includes(searchVal) || phone.includes(searchVal) || vno.includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filtered.map(c => {
+                // Find matching vehicle to display pricing and model
+                const v = stateVehicles.find(item => item.vehicle_no === c.rented_vehicle_no);
+                const vehicleModel = v ? v.model : 'Vehicle Assigned';
+                const rentRate = v ? `₹${Number(v.rent_per_day).toLocaleString('en-IN')}/day` : '—';
+                const formattedDate = c.rental_date ? c.rental_date.split('T')[0] : 'N/A';
+
+                return `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3 px-4 font-mono font-bold text-slate-400">
+                        #${c.customer_id}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center font-bold text-xs uppercase">
+                                ${c.customer_name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-bold text-white">${c.customer_name}</p>
+                                <p class="text-[10px] text-slate-400">Registered Customer</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 font-mono text-slate-300">
+                        ${c.phone_no}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono font-bold text-[11px]">
+                                ${c.rented_vehicle_no}
+                            </span>
+                            <span class="text-xs text-slate-400 truncate max-w-[140px]" title="${vehicleModel}">
+                                ${vehicleModel}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-slate-300">
+                        <div class="flex items-center space-x-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>${formattedDate}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 font-mono font-bold text-emerald-400">
+                        ${rentRate}
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="inline-flex items-center space-x-1.5">
+                            <button onclick="openEditCustomerModal(${c.customer_id})"
+                                class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-darkBorder transition"
+                                title="Edit Customer (PUT)">
+                                <i data-lucide="edit" class="w-3.5 h-3.5 text-cyan-400"></i>
+                            </button>
+                            <button onclick="handleDeleteCustomer(${c.customer_id})"
+                                class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition text-xs font-semibold"
+                                title="Check In / Return Vehicle & Remove Log">
+                                <i data-lucide="check-check" class="w-3.5 h-3.5 text-rose-400"></i>
+                                <span>Return / Delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // FORM SUBMISSION HANDLERS (POST)
+        // ==========================================
+
+        // Panel A: Vehicle Registration POST
+        async function handleVehicleSubmit(e) {
+            e.preventDefault();
+            const vehicle_no = document.getElementById('v_vehicle_no').value.trim();
+            const vehicle_category = document.getElementById('v_vehicle_category').value;
+            const model = document.getElementById('v_model').value.trim();
+            const rent_per_day = parseInt(document.getElementById('v_rent_per_day').value, 10);
+            const status = "Available";
+
+            // Check if vehicle_no already exists locally
+            if (stateVehicles.some(v => v.vehicle_no.toLowerCase() === vehicle_no.toLowerCase())) {
+                showToast(`Vehicle '${vehicle_no}' already exists in inventory!`, 'error');
+                return;
+            }
+
+            const payload = { vehicle_no, vehicle_category, model, rent_per_day, status };
+
+            try {
+                const res = await fetch('/vehicles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errMsg = await res.text();
+                    throw new Error(errMsg || 'Failed to insert vehicle');
+                }
+
+                showToast(`Vehicle ${vehicle_no} successfully registered!`, 'success');
+            } catch (err) {
+                console.warn('API error, saving locally in state:', err.message);
+                showToast(`Saved locally: ${vehicle_no} (${err.message})`, 'info');
+            }
+
+            // Update local state and UI immediately
+            stateVehicles.unshift(payload);
+            document.getElementById('formAddVehicle').reset();
+            document.getElementById('v_vehicle_category').value = 'Car';
+            selectCategory('Car');
+
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+        }
+
+        // Panel B: Customer Checkout POST
+        async function handleCustomerSubmit(e) {
+            e.preventDefault();
+            const customer_name = document.getElementById('c_customer_name').value.trim();
+            const phone_no = document.getElementById('c_phone_no').value.trim();
+            const rented_vehicle_no = document.getElementById('c_rented_vehicle_no').value;
+            const rental_date = document.getElementById('c_rental_date').value;
+
+            if (!rented_vehicle_no) {
+                showToast('Please pick an available vehicle from the dropdown!', 'error');
+                return;
+            }
+
+            const payload = { customer_name, phone_no, rented_vehicle_no, rental_date };
+
+            try {
+                const res = await fetch('/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errMsg = await res.text();
+                    throw new Error(errMsg || 'Failed to dispatch customer rental');
+                }
+
+                showToast(`Rental logged for ${customer_name}!`, 'success');
+            } catch (err) {
+                console.warn('API error, logging customer locally:', err.message);
+                showToast(`Checkout saved locally (${err.message})`, 'info');
+            }
+
+            // Update local vehicle status to 'Rented'
+            const vIndex = stateVehicles.findIndex(v => v.vehicle_no === rented_vehicle_no);
+            if (vIndex !== -1) {
+                stateVehicles[vIndex].status = 'Rented';
+            }
+
+            // Generate new ID and push to customer logs
+            const nextId = stateCustomers.length > 0 ? Math.max(...stateCustomers.map(c => c.customer_id)) + 1 : 1;
+            stateCustomers.unshift({ customer_id: nextId, ...payload });
+
+            document.getElementById('formAddCustomer').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('c_rental_date').value = today;
+
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+        }
+
+        // ==========================================
+        // EDIT MODAL & SUBMISSION (PUT)
+        // ==========================================
+
+        function openEditVehicleModal(vehicle_no) {
+            const v = stateVehicles.find(item => item.vehicle_no === vehicle_no);
+            if (!v) return;
+
+            document.getElementById('edit_v_id').value = v.vehicle_no;
+            document.getElementById('edit_v_no').value = v.vehicle_no;
+            document.getElementById('edit_v_category').value = v.vehicle_category;
+            document.getElementById('edit_v_status').value = v.status;
+            document.getElementById('edit_v_model').value = v.model;
+            document.getElementById('edit_v_rent').value = v.rent_per_day;
+
+            document.getElementById('editVehicleModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeEditVehicleModal() {
+            document.getElementById('editVehicleModal').classList.add('hidden');
+        }
+
+        async function handleEditVehicleSubmit(e) {
+            e.preventDefault();
+            const vehicle_no = document.getElementById('edit_v_id').value;
+            const vehicle_category = document.getElementById('edit_v_category').value;
+            const status = document.getElementById('edit_v_status').value;
+            const model = document.getElementById('edit_v_model').value.trim();
+            const rent_per_day = parseInt(document.getElementById('edit_v_rent').value, 10);
+
+            const payload = { vehicle_category, model, rent_per_day, status };
+
+            try {
+                const res = await fetch(`/vehicles/${encodeURIComponent(vehicle_no)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showToast(`Vehicle ${vehicle_no} updated!`, 'success');
+            } catch (err) {
+                console.warn('API error, applying update locally:', err.message);
+                showToast(`Updated locally: ${vehicle_no}`, 'info');
+            }
+
+            const idx = stateVehicles.findIndex(v => v.vehicle_no === vehicle_no);
+            if (idx !== -1) {
+                stateVehicles[idx] = { vehicle_no, ...payload };
+            }
+
+            closeEditVehicleModal();
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+        }
+
+        function openEditCustomerModal(customer_id) {
+            const c = stateCustomers.find(item => item.customer_id === customer_id);
+            if (!c) return;
+
+            document.getElementById('edit_c_id').value = c.customer_id;
+            document.getElementById('edit_c_name').value = c.customer_name;
+            document.getElementById('edit_c_phone').value = c.phone_no;
+            document.getElementById('edit_c_date').value = c.rental_date ? c.rental_date.split('T')[0] : '';
+
+            // Populate vehicle options for edit
+            const select = document.getElementById('edit_c_vehicle');
+            select.innerHTML = '';
+            stateVehicles.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.vehicle_no;
+                opt.textContent = `${v.vehicle_no} - ${v.model} (${v.status})`;
+                if (v.vehicle_no === c.rented_vehicle_no) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('editCustomerModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeEditCustomerModal() {
+            document.getElementById('editCustomerModal').classList.add('hidden');
+        }
+
+        async function handleEditCustomerSubmit(e) {
+            e.preventDefault();
+            const customer_id = parseInt(document.getElementById('edit_c_id').value, 10);
+            const customer_name = document.getElementById('edit_c_name').value.trim();
+            const phone_no = document.getElementById('edit_c_phone').value.trim();
+            const rented_vehicle_no = document.getElementById('edit_c_vehicle').value;
+            const rental_date = document.getElementById('edit_c_date').value;
+
+            const payload = { customer_name, phone_no, rented_vehicle_no, rental_date };
+
+            try {
+                const res = await fetch(`/customers/${customer_id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showToast(`Customer log #${customer_id} updated!`, 'success');
+            } catch (err) {
+                console.warn('API error, applying customer update locally:', err.message);
+                showToast(`Updated customer locally`, 'info');
+            }
+
+            const idx = stateCustomers.findIndex(c => c.customer_id === customer_id);
+            if (idx !== -1) {
+                stateCustomers[idx] = { customer_id, ...payload };
+            }
+
+            closeEditCustomerModal();
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+        }
+
+        // ==========================================
+        // REMOVAL HANDLERS (DELETE)
+        // ==========================================
+
+        async function handleDeleteVehicle(vehicle_no) {
+            if (!confirm(`Are you sure you want to remove vehicle '${vehicle_no}' from fleet inventory?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/vehicles/${encodeURIComponent(vehicle_no)}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showToast(`Vehicle ${vehicle_no} deleted!`, 'success');
+            } catch (err) {
+                console.warn('API error, removing vehicle locally:', err.message);
+                showToast(`Removed vehicle locally: ${vehicle_no}`, 'info');
+            }
+
+            stateVehicles = stateVehicles.filter(v => v.vehicle_no !== vehicle_no);
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+        }
+
+        async function handleDeleteCustomer(customer_id) {
+            const c = stateCustomers.find(item => item.customer_id === customer_id);
+            const promptMsg = c 
+                ? `Confirm check-in & vehicle return for ${c.customer_name}?\nAssigned Vehicle '${c.rented_vehicle_no}' will be marked Available.`
+                : `Are you sure you want to delete customer log #${customer_id}?`;
+
+            if (!confirm(promptMsg)) return;
+
+            try {
+                const res = await fetch(`/customers/${customer_id}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showToast(`Rental returned & closed for customer #${customer_id}!`, 'success');
+            } catch (err) {
+                console.warn('API error, removing customer log locally:', err.message);
+                showToast(`Removed log locally`, 'info');
+            }
+
+            // Release vehicle back to Available
+            if (c && c.rented_vehicle_no) {
+                const v = stateVehicles.find(item => item.vehicle_no === c.rented_vehicle_no);
+                if (v) v.status = 'Available';
+            }
+
+            stateCustomers = stateCustomers.filter(item => item.customer_id !== customer_id);
+            updateDashboardMetrics();
+            populateAvailableVehiclesDropdown();
+            renderFleetGrid();
+            renderCustomerTable();
+        }
+
+        // ==========================================
+        // TOAST NOTIFICATION UTILITY
+        // ==========================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const bgClasses = {
+                success: 'bg-emerald-900/90 border-emerald-500/50 text-emerald-100',
+                error: 'bg-rose-900/90 border-rose-500/50 text-rose-100',
+                info: 'bg-slate-800/90 border-darkBorder text-slate-200'
+            };
+
+            const iconNames = {
+                success: 'check-circle-2',
+                error: 'alert-triangle',
+                info: 'info'
+            };
+
+            toast.className = `flex items-center space-x-2.5 px-4 py-3 rounded-xl border backdrop-blur-md shadow-xl text-xs font-semibold pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 ${bgClasses[type] || bgClasses.info}`;
+            toast.innerHTML = `
+                <i data-lucide="${iconNames[type] || 'info'}" class="w-4 h-4 flex-shrink-0"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
